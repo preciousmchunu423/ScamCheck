@@ -64,7 +64,9 @@
         .high-risk { color:#c52219; display:block; margin-bottom:14px; }
         .score h2 { font-size:17px; }
         .score li { color:var(--muted); margin:4px 0; }
-        @media (min-width:700px) { .container { max-width:700px; } }
+        
+        /* The @@ is required so Razor doesn't try to read this as C# code */
+        @@media (min-width:700px) { .container { max-width:700px; } }
     </style>
 </head>
 <body>
