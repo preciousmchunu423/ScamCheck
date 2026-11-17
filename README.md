@@ -1,4 +1,4 @@
-ScamCheck
+SCAMCHECK
 A mobile-first, privacy-focused web application designed to protect South African citizens from phishing and help SMMEs secure their data.
 
 🔗 https://scamcheck-jq2w.onrender.com/
