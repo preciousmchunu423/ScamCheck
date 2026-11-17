@@ -10,4 +10,4 @@ WORKDIR /app
 COPY --from=build /app/out .
 ENV ASPNETCORE_URLS=http://+:10000
 EXPOSE 10000
-ENTRYPOINT ["dotnet", "ScamCheck.dll"]
+ENTRYPOINT ["dotnet", "ScamCheck.dll"]# Force rebuild 11/17/2026 15:43:09
