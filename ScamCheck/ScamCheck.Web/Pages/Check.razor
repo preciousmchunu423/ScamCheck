@@ -1,0 +1,10 @@
+@page "/check"
+@inject HttpClient Http
+@inject IJSRuntime JS
+<h1>Check a link</h1><p>Paste a URL to compare it with known scam domains and local warning heuristics.</p>
+@if (!online) { <p class="error">You are offline. The check will run when connectivity returns.</p> }
+<form @onsubmit="CheckAsync" @onsubmit:preventDefault><input @bind="url" placeholder="https://example.co.za" aria-label="URL" /><button disabled="@(!online)">Check link</button></form>
+@if (error is not null) { <p class="error">@error</p> }
+@if (result is not null) { <div class="result @result.Verdict"><h2>@result.Verdict.ToUpperInvariant()</h2><p>@(result.Advice ?? "")</p>@if(result.Brand is not null){<p>Brand: @result.Brand</p>}@if(result.Score is not null){<p>Score: @result.Score / 5</p>}</div> }
+<p><strong>Not in our blacklist does not mean safe. Never enter banking details from an SMS link.</strong></p>
+@code { private string url=""; private string? error; private LinkResult? result; private bool online=true; protected override async Task OnInitializedAsync(){online=await JS.InvokeAsync<bool>("scamOnline");} private async Task CheckAsync() { if(!online)return; error=null; result=null; try { var response=await Http.PostAsJsonAsync("api/check-link",new {url}); if(!response.IsSuccessStatusCode){error="Please enter a valid HTTP or HTTPS URL.";return;} result=await response.Content.ReadFromJsonAsync<LinkResult>(); } catch { error="The check service is unavailable."; } } private sealed class LinkResult { public string Verdict{get;set;}=""; public string? Advice{get;set;} public string? Brand{get;set;} public int? Score{get;set;} } }

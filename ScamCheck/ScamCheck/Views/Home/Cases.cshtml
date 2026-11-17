@@ -1,0 +1,23 @@
+@model IEnumerable<ScamCheck.Models.ScamCase>
+@{ ViewData["Title"] = "Scam case library"; }
+<h1 class="page-title">Scam case library</h1>
+<form method="get">
+    <label for="search">Search scams</label>
+    <input id="search" name="q" class="full-input" placeholder="Search by brand or words" />
+    <label for="brand">Brand</label>
+    <select id="brand" name="brand" class="full-input"><option value="">All brands</option>@foreach (var brandName in (IEnumerable<string>)(ViewBag.Brands ?? Array.Empty<string>())) { <option value="@brandName">@brandName</option> }</select>
+    <button class="primary search-button" type="submit">Search</button>
+</form>
+<div class="case-list">
+@foreach (var scam in Model)
+{
+    <article class="card case-card" data-search="@scam.Title @scam.Description @scam.BrandImpersonated @scam.RedFlags"><h2>@scam.Title</h2><p class="meta">Channel: @scam.Channel &nbsp; Brand: @scam.BrandImpersonated</p><p>@scam.Description</p><strong>Red flags</strong><ul>@foreach (var flag in scam.RedFlags.Split('|')) { <li>@flag</li> }</ul></article>
+}
+</div>
+<script>
+const search = document.getElementById('search');
+search.addEventListener('input', () => {
+    const term = search.value.toLowerCase();
+    document.querySelectorAll('.case-card').forEach(card => card.hidden = !card.dataset.search.toLowerCase().includes(term));
+});
+</script>

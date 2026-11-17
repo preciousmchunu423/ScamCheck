@@ -1,0 +1,7 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+<div class="offline" style="display:@(offline ? "block" : "none")">You are offline. Some information may be unavailable.</div>
+<header><a href="/" class="brand">ScamCheck</a><nav><a href="/check">Check a link</a><a href="/backup-check">Backup check</a><a href="/cases">Scam cases</a></nav></header>
+<main>@Body</main>
+<footer>South African cybersecurity self-check</footer>
+@code { private bool offline; protected override async Task OnAfterRenderAsync(bool firstRender) { if (firstRender) offline = !(await JS.InvokeAsync<bool>("scamOnline")); } }

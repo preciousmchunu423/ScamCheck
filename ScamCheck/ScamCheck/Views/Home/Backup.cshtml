@@ -1,0 +1,74 @@
+@{ ViewData["Title"] = "Backup check"; }
+<div class="backup-page">
+    <h1 class="page-title">Could your backups survive an attack?</h1>
+    <p class="muted">Answer 8 questions honestly. No login, nothing saved to you.</p>
+    <div id="questionsList"><p class="remaining">Loading questions...</p></div>
+    <button id="submitBtn" class="primary wide" type="button" hidden>See my risk score</button>
+    <section id="resultBox" class="score" hidden>
+        <span class="meta">Your risk score</span>
+        <div id="scoreDisplay" class="score-number">0 <small>/ 100</small></div>
+        <div class="progress"><span id="scoreBar"></span></div>
+        <strong id="riskLabel" class="high-risk">High risk</strong>
+        <h2>Fix these, in this order</h2>
+        <ol id="fixesList"></ol>
+    </section>
+</div>
+@section Scripts {
+<script>
+let questions = [];
+const answers = {};
+
+async function loadQuestions() {
+    try {
+        const response = await fetch('/api/scam/checklist');
+        if (!response.ok) throw new Error('Checklist request failed');
+        questions = await response.json();
+        document.getElementById('questionsList').innerHTML = questions.map((question, index) => `
+            <div class="question card">
+                <span class="meta">Question ${index + 1} of ${questions.length}</span>
+                <h2>${question.question}</h2>
+                <p class="hint">For most questions, Yes means you are protected. For questions describing a risky condition, Yes increases your risk.</p>
+                <div class="answer">
+                    <button type="button" data-id="${question.id}" data-value="true">Yes</button>
+                    <button type="button" data-id="${question.id}" data-value="false">No</button>
+                </div>
+            </div>`).join('');
+        document.querySelectorAll('.answer button').forEach(button => button.addEventListener('click', () => {
+            const id = Number(button.dataset.id);
+            answers[id] = button.dataset.value === 'true';
+            button.parentElement.querySelectorAll('button').forEach(item => item.classList.remove('selected'));
+            button.classList.add('selected');
+        }));
+        document.getElementById('submitBtn').hidden = false;
+    } catch (error) {
+        document.getElementById('questionsList').innerHTML = '<p class="error-text">Failed to load questions. Please try again.</p>';
+    }
+}
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+    if (Object.keys(answers).length < questions.length) {
+        alert('Please answer all questions before seeing your score.');
+        return;
+    }
+    let data;
+    try {
+        const response = await fetch('/api/scam/submit-checklist', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers })
+        });
+        if (!response.ok) throw new Error('Score request failed');
+        data = await response.json();
+    } catch {
+        alert('You appear to be offline. Submitting the backup score requires an internet connection.');
+        return;
+    }
+    document.getElementById('resultBox').hidden = false;
+    document.getElementById('scoreDisplay').innerHTML = `${data.riskScore} <small>/ 100</small>`;
+    document.getElementById('scoreBar').style.width = `${data.riskScore}%`;
+    document.getElementById('riskLabel').textContent = data.riskScore >= 60 ? 'High risk' : data.riskScore >= 30 ? 'Medium risk' : 'Low risk';
+    document.getElementById('fixesList').innerHTML = data.fixes.length ? data.fixes.map(fix => `<li>${fix}</li>`).join('') : '<li>Your backups look solid.</li>';
+});
+
+loadQuestions();
+</script>
+}
